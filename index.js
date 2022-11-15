@@ -53,7 +53,7 @@ export const useRoute = (pattern) => {
 
 // Returns stable navigation function that does not change between renders
 const useNavigateRef = (options) => {
-  const [, navigate] = useLocation();
+  const navigate = useNavigate();
   const navRef = useRef();
 
   useIsomorphicLayoutEffect(() => {
