@@ -43,21 +43,24 @@ export const useLocation = () => {
   return router.hook(router);
 };
 
+// shortcut hook for doing `[, navigate] = useLocation()`
+export const useNavigate = () => useLocation()[1];
+
 export const useRoute = (pattern) => {
   const [path] = useLocation();
   return useRouter().matcher(pattern, path);
 };
 
-// shortcut hook for doing `[, navigate] = useLocation()`
-export const useNavigate = () => useLocation()[1];
-
-// internal hook used by Link and Redirect in order to perform navigation
+// Returns stable navigation function that does not change between renders
 const useNavigateRef = (options) => {
-  const navRef = useRef();
   const [, navigate] = useLocation();
+  const navRef = useRef();
 
-  navRef.current = () => navigate(options.to || options.href, options);
-  return navRef;
+  useIsomorphicLayoutEffect(() => {
+    navRef.current = () => navigate(options.to || options.href, options);
+  });
+
+  return useCallback(() => navRef.current(), []);
 };
 
 /*
@@ -106,7 +109,7 @@ export const Route = ({ path, match, component, children }) => {
 };
 
 export const Link = forwardRef((props, ref) => {
-  const navRef = useNavigateRef(props);
+  const navigate = useNavigateRef(props);
   const { base } = useRouter();
 
   let { to, href = to, children, onClick } = props;
@@ -127,7 +130,7 @@ export const Link = forwardRef((props, ref) => {
       onClick && onClick(event);
       if (!event.defaultPrevented) {
         event.preventDefault();
-        navRef.current();
+        navigate();
       }
     },
     // navRef is a ref so it never changes
@@ -184,11 +187,11 @@ export const Switch = ({ children, location }) => {
 };
 
 export const Redirect = (props) => {
-  const navRef = useNavigateRef(props);
+  const redirect = useNavigateRef(props);
 
-  // empty array means running the effect once, navRef is a ref so it never changes
+  // `redirect` never changes so it is safe to omit dependencies
   useIsomorphicLayoutEffect(() => {
-    navRef.current();
+    redirect();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return null;
