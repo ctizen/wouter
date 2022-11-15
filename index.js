@@ -48,8 +48,11 @@ export const useRoute = (pattern) => {
   return useRouter().matcher(pattern, path);
 };
 
+// shortcut hook for doing `[, navigate] = useLocation()`
+export const useNavigate = () => useLocation()[1];
+
 // internal hook used by Link and Redirect in order to perform navigation
-const useNavigate = (options) => {
+const useNavigateRef = (options) => {
   const navRef = useRef();
   const [, navigate] = useLocation();
 
@@ -103,7 +106,7 @@ export const Route = ({ path, match, component, children }) => {
 };
 
 export const Link = forwardRef((props, ref) => {
-  const navRef = useNavigate(props);
+  const navRef = useNavigateRef(props);
   const { base } = useRouter();
 
   let { to, href = to, children, onClick } = props;
@@ -181,7 +184,7 @@ export const Switch = ({ children, location }) => {
 };
 
 export const Redirect = (props) => {
-  const navRef = useNavigate(props);
+  const navRef = useNavigateRef(props);
 
   // empty array means running the effect once, navRef is a ref so it never changes
   useIsomorphicLayoutEffect(() => {
